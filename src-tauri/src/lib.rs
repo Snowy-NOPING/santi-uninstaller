@@ -2,6 +2,7 @@ mod icon;
 mod leftovers;
 mod registry;
 mod uninstall;
+mod updater;
 
 use std::process::Command;
 
@@ -105,6 +106,7 @@ pub fn run() {
             uninstall::force_remove,
             leftovers::scan_leftovers,
             leftovers::delete_leftovers,
+            updater::run_installer_from_url,
             open_install_folder,
             read_icon,
         ])

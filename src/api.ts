@@ -33,6 +33,9 @@ export const openInstallFolder = (path: string) =>
 export const readIcon = (iconPath: string) =>
   invoke<string>("read_icon", { iconPath });
 
+export const runInstallerFromUrl = (url: string) =>
+  invoke<void>("run_installer_from_url", { url });
+
 /** True when a backend error string signals the action needs admin rights. */
 export function needsElevation(err: unknown): boolean {
   return typeof err === "string" && err.startsWith("ELEVATION_REQUIRED");

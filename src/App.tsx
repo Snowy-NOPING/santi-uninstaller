@@ -1,12 +1,14 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ask, confirm } from "@tauri-apps/plugin-dialog";
+import { getVersion } from "@tauri-apps/api/app";
 import {
   cleanError,
   deleteLeftovers,
   forceRemove,
   needsElevation,
   openInstallFolder,
+  runInstallerFromUrl,
   runUninstall,
   runUninstallAdmin,
   scanInstalledPrograms,
@@ -46,6 +48,22 @@ const VALID_THEMES: Theme[] = [
 ];
 
 const DEFAULT_SETTINGS: AppSettings = { cleanLeftoversFirst: false };
+
+const RELEASES_LATEST_URL =
+  "https://api.github.com/repos/Snowy-NOPING/santi-uninstaller/releases/latest";
+
+/** True if `latest` is a strictly newer version than `current` (dotted semver). */
+function isNewer(latest: string, current: string): boolean {
+  const a = latest.split(".").map((n) => parseInt(n, 10) || 0);
+  const b = current.split(".").map((n) => parseInt(n, 10) || 0);
+  for (let i = 0; i < Math.max(a.length, b.length); i++) {
+    const x = a[i] ?? 0;
+    const y = b[i] ?? 0;
+    if (x > y) return true;
+    if (x < y) return false;
+  }
+  return false;
+}
 
 function loadSettings(): AppSettings {
   try {
@@ -126,6 +144,48 @@ export default function App() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  // Check GitHub for a newer release on launch; offer to download + run its
+  // installer. Silent on any error (offline, rate-limited, no release yet).
+  const checkForUpdate = useCallback(async () => {
+    try {
+      const current = await getVersion();
+      const res = await fetch(RELEASES_LATEST_URL, {
+        headers: { Accept: "application/vnd.github+json" },
+      });
+      if (!res.ok) return;
+      const data = await res.json();
+      const latest = String(data?.tag_name ?? "")
+        .replace(/^v/i, "")
+        .trim();
+      if (!latest || !isNewer(latest, current)) return;
+
+      const assets: Array<{ name?: string; browser_download_url?: string }> =
+        Array.isArray(data.assets) ? data.assets : [];
+      const asset =
+        assets.find((a) => /setup\.exe$/i.test(a?.name ?? "")) ??
+        assets.find((a) => /\.exe$/i.test(a?.name ?? ""));
+      if (!asset?.browser_download_url) return;
+
+      const ok = await ask(
+        `A new version of santi.uninstaller is available.\n\nInstalled: v${current}\nLatest: v${latest}\n\nDownload and install it now? The app will close while the installer runs.`,
+        { title: "Update available", kind: "info", okLabel: "Update now", cancelLabel: "Later" },
+      );
+      if (!ok) return;
+
+      showToast("Downloading update…", "info");
+      await runInstallerFromUrl(asset.browser_download_url);
+    } catch {
+      // Offline / API error — skip quietly.
+    }
+  }, [showToast]);
+
+  const updateCheckedRef = useRef(false);
+  useEffect(() => {
+    if (updateCheckedRef.current) return; // guard StrictMode double-run
+    updateCheckedRef.current = true;
+    void checkForUpdate();
+  }, [checkForUpdate]);
 
   // --- Derived data ---
   const leftoverIds = useMemo(
