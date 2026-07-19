@@ -1,5 +1,6 @@
 import { AnimatePresence, motion } from "framer-motion";
-import { IconX } from "./Icons";
+import { IconChevron, IconX } from "./Icons";
+import type { Theme } from "../types";
 
 export interface AppSettings {
   cleanLeftoversFirst: boolean;
@@ -9,8 +10,28 @@ interface Props {
   open: boolean;
   settings: AppSettings;
   onChange: (next: AppSettings) => void;
+  theme: Theme;
+  onThemeChange: (theme: Theme) => void;
   onClose: () => void;
 }
+
+const THEME_LABELS: Record<Theme, string> = {
+  light: "Light",
+  dark: "Dark",
+  latte: "Catppuccin Latte",
+  frappe: "Catppuccin Frappé",
+  macchiato: "Catppuccin Macchiato",
+  mocha: "Catppuccin Mocha",
+};
+
+const THEME_ORDER: Theme[] = [
+  "light",
+  "dark",
+  "latte",
+  "frappe",
+  "macchiato",
+  "mocha",
+];
 
 function Toggle({
   checked,
@@ -39,7 +60,14 @@ function Toggle({
   );
 }
 
-export function Settings({ open, settings, onChange, onClose }: Props) {
+export function Settings({
+  open,
+  settings,
+  onChange,
+  theme,
+  onThemeChange,
+  onClose,
+}: Props) {
   return (
     <AnimatePresence>
       {open && (
@@ -66,6 +94,37 @@ export function Settings({ open, settings, onChange, onClose }: Props) {
               >
                 <IconX width={15} height={15} />
               </button>
+            </div>
+
+            <div className="border-b border-line px-5 py-4">
+              <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-faint">
+                Appearance
+              </p>
+              <div className="flex items-center justify-between gap-4 rounded-lg border border-line p-3">
+                <div className="min-w-0">
+                  <div className="text-[13px] font-medium">Theme</div>
+                  <p className="mt-1 text-[12px] leading-relaxed text-muted">
+                    Pick a light theme, a plain dark theme, or one of the four
+                    Catppuccin flavors.
+                  </p>
+                </div>
+                <div className="relative shrink-0">
+                  <select
+                    value={theme}
+                    onChange={(e) => onThemeChange(e.target.value as Theme)}
+                    className="appearance-none rounded-lg border border-line bg-surface py-1.5 pl-3 pr-8 text-[12.5px] font-medium outline-none focus:border-accent"
+                  >
+                    {THEME_ORDER.map((id) => (
+                      <option key={id} value={id}>
+                        {THEME_LABELS[id]}
+                      </option>
+                    ))}
+                  </select>
+                  <span className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-faint">
+                    <IconChevron width={14} height={14} />
+                  </span>
+                </div>
+              </div>
             </div>
 
             <div className="px-5 py-4">

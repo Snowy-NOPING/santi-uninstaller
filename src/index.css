@@ -21,8 +21,96 @@
   --color-on-danger: #ffffff;
 }
 
-/* Dark theme — Catppuccin Mocha */
+/* Plain dark theme (not Catppuccin) — neutral slate + indigo accent */
 :root[data-theme="dark"] {
+  --color-canvas: #0f1115;
+  --color-surface: #16181d;
+  --color-line: #24262c;
+  --color-line-strong: #32343b;
+  --color-ink: #e8eaed;
+  --color-muted: #9aa0ab;
+  --color-faint: #6b7280;
+  --color-accent: #6366f1;
+  --color-accent-soft: #1c1a3a;
+  --color-danger: #ef4444;
+  --color-danger-soft: #3f1414;
+  --color-good: #22c55e;
+  --color-info: #0ea5e9;
+  --color-flag: #ec4899;
+  --color-flag-soft: #3b0f2a;
+  --color-on-accent: #ffffff;
+  --color-on-danger: #ffffff;
+  color-scheme: dark;
+}
+
+/* Catppuccin Latte — https://catppuccin.com/palette/ */
+:root[data-theme="latte"] {
+  --color-canvas: #e6e9ef; /* mantle */
+  --color-surface: #eff1f5; /* base */
+  --color-line: #ccd0da; /* surface0 */
+  --color-line-strong: #bcc0cc; /* surface1 */
+  --color-ink: #4c4f69; /* text */
+  --color-muted: #6c6f85; /* subtext0 */
+  --color-faint: #8c8fa1; /* overlay1 */
+  --color-accent: #8839ef; /* mauve */
+  --color-accent-soft: #e6d9fa;
+  --color-danger: #d20f39; /* red */
+  --color-danger-soft: #fbdee3;
+  --color-good: #40a02b; /* green */
+  --color-info: #209fb5; /* sapphire */
+  --color-flag: #ea76cb; /* pink */
+  --color-flag-soft: #fbe0f3;
+  --color-on-accent: #ffffff;
+  --color-on-danger: #ffffff;
+  color-scheme: light;
+}
+
+/* Catppuccin Frappé — https://catppuccin.com/palette/ */
+:root[data-theme="frappe"] {
+  --color-canvas: #292c3c; /* mantle */
+  --color-surface: #303446; /* base */
+  --color-line: #414559; /* surface0 */
+  --color-line-strong: #51576d; /* surface1 */
+  --color-ink: #c6d0f5; /* text */
+  --color-muted: #a5adce; /* subtext0 */
+  --color-faint: #838ba7; /* overlay1 */
+  --color-accent: #ca9ee6; /* mauve */
+  --color-accent-soft: #3b3552;
+  --color-danger: #e78284; /* red */
+  --color-danger-soft: #3a2b2c;
+  --color-good: #a6d189; /* green */
+  --color-info: #85c1dc; /* sapphire */
+  --color-flag: #f4b8e4; /* pink */
+  --color-flag-soft: #3c2b38;
+  --color-on-accent: #232634; /* crust — dark text on the light mauve accent */
+  --color-on-danger: #232634;
+  color-scheme: dark;
+}
+
+/* Catppuccin Macchiato — https://catppuccin.com/palette/ */
+:root[data-theme="macchiato"] {
+  --color-canvas: #1e2030; /* mantle */
+  --color-surface: #24273a; /* base */
+  --color-line: #363a4f; /* surface0 */
+  --color-line-strong: #494d64; /* surface1 */
+  --color-ink: #cad3f5; /* text */
+  --color-muted: #a5adcb; /* subtext0 */
+  --color-faint: #8087a2; /* overlay1 */
+  --color-accent: #c6a0f6; /* mauve */
+  --color-accent-soft: #342f4c;
+  --color-danger: #ed8796; /* red */
+  --color-danger-soft: #362731;
+  --color-good: #a6da95; /* green */
+  --color-info: #7dc4e4; /* sapphire */
+  --color-flag: #f5bde6; /* pink */
+  --color-flag-soft: #382736;
+  --color-on-accent: #181926; /* crust — dark text on the light mauve accent */
+  --color-on-danger: #181926;
+  color-scheme: dark;
+}
+
+/* Catppuccin Mocha — https://catppuccin.com/palette/ */
+:root[data-theme="mocha"] {
   --color-canvas: #181825; /* mantle */
   --color-surface: #1e1e2e; /* base */
   --color-line: #313244; /* surface0 */
@@ -38,7 +126,7 @@
   --color-info: #74c7ec; /* sapphire */
   --color-flag: #f5c2e7; /* pink */
   --color-flag-soft: #332a3a;
-  --color-on-accent: #1e1e2e; /* dark text on the light mauve accent */
+  --color-on-accent: #1e1e2e; /* base — dark text on the light mauve accent */
   --color-on-danger: #1e1e2e;
   color-scheme: dark;
 }
@@ -62,27 +150,19 @@
     overflow: hidden;
     user-select: none;
   }
-  /* Flat, minimal scrollbars */
+  /* Flat, minimal scrollbars — themed via the same tokens as everything else */
   ::-webkit-scrollbar {
     width: 10px;
     height: 10px;
   }
   ::-webkit-scrollbar-thumb {
-    background: #d6dae0;
+    background: var(--color-line-strong);
     border-radius: 999px;
     border: 3px solid transparent;
     background-clip: content-box;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: #c1c7cf;
-    background-clip: content-box;
-  }
-  :root[data-theme="dark"] ::-webkit-scrollbar-thumb {
-    background: #45475a;
-    background-clip: content-box;
-  }
-  :root[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
-    background: #585b70;
+    background: var(--color-faint);
     background-clip: content-box;
   }
 }

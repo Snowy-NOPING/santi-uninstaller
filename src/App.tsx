@@ -19,6 +19,7 @@ import type {
   LeftoverItem,
   LeftoverReport,
   SortId,
+  Theme,
 } from "./types";
 import { Sidebar } from "./components/Sidebar";
 import { MetricCards } from "./components/MetricCards";
@@ -28,15 +29,16 @@ import { ProgramList } from "./components/ProgramList";
 import { DetailsPanel } from "./components/DetailsPanel";
 import { ToastHost, type ToastData } from "./components/Toast";
 import { Settings, type AppSettings } from "./components/Settings";
-import {
-  IconInfo,
-  IconWarning,
-  IconSun,
-  IconMoon,
-  IconSettings,
-} from "./components/Icons";
+import { IconInfo, IconWarning, IconSettings } from "./components/Icons";
 
-type Theme = "light" | "dark";
+const VALID_THEMES: Theme[] = [
+  "light",
+  "dark",
+  "latte",
+  "frappe",
+  "macchiato",
+  "mocha",
+];
 
 const DEFAULT_SETTINGS: AppSettings = { cleanLeftoversFirst: false };
 
@@ -65,9 +67,10 @@ export default function App() {
   const [busy, setBusy] = useState<Busy>({ id: null, action: null });
   const [toast, setToast] = useState<ToastData | null>(null);
   const [showInfo, setShowInfo] = useState(false);
-  const [theme, setTheme] = useState<Theme>(
-    () => (localStorage.getItem("theme") as Theme) || "dark",
-  );
+  const [theme, setTheme] = useState<Theme>(() => {
+    const saved = localStorage.getItem("theme") as Theme | null;
+    return saved && VALID_THEMES.includes(saved) ? saved : "mocha";
+  });
   const [settings, setSettings] = useState<AppSettings>(loadSettings);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const toastTimer = useRef<number | undefined>(undefined);
@@ -395,17 +398,6 @@ export default function App() {
               <IconSettings width={15} height={15} />
             </button>
             <button
-              onClick={() => setTheme((t) => (t === "dark" ? "light" : "dark"))}
-              title={theme === "dark" ? "Switch to light" : "Switch to dark"}
-              className="flex h-[30px] w-[30px] items-center justify-center rounded-lg border border-line bg-surface text-muted transition-colors hover:text-ink"
-            >
-              {theme === "dark" ? (
-                <IconSun width={15} height={15} />
-              ) : (
-                <IconMoon width={15} height={15} />
-              )}
-            </button>
-            <button
               onClick={() => setShowInfo((v) => !v)}
               className="flex items-center gap-1.5 rounded-lg border border-line bg-surface px-2.5 py-1.5 text-[12px] font-medium text-muted transition-colors hover:text-ink"
             >
@@ -492,6 +484,8 @@ export default function App() {
         open={settingsOpen}
         settings={settings}
         onChange={setSettings}
+        theme={theme}
+        onThemeChange={setTheme}
         onClose={() => setSettingsOpen(false)}
       />
 

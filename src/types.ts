@@ -26,3 +26,10 @@ export interface LeftoverReport {
 
 export type CategoryId = "all" | "recent" | "large" | "windows" | "leftovers";
 export type SortId = "name" | "size" | "date";
+export type Theme =
+  | "light"
+  | "dark"
+  | "latte"
+  | "frappe"
+  | "macchiato"
+  | "mocha";

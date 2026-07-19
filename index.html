@@ -6,9 +6,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>santi.uninstaller</title>
     <script>
-      // Apply saved theme before first paint (default: dark / Catppuccin Mocha).
+      // Apply saved theme before first paint (default: Catppuccin Mocha).
       (function () {
-        var t = localStorage.getItem("theme") || "dark";
+        var valid = ["light", "dark", "latte", "frappe", "macchiato", "mocha"];
+        var t = localStorage.getItem("theme");
+        if (valid.indexOf(t) === -1) t = "mocha";
         document.documentElement.setAttribute("data-theme", t);
       })();
     </script>
