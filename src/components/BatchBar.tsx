@@ -25,7 +25,7 @@ export function BatchBar({ count, busy, onUninstall, onClear }: Props) {
           <button
             onClick={onUninstall}
             disabled={busy}
-            className="flex items-center gap-1.5 rounded-md bg-accent px-3 py-1.5 text-[12px] font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+            className="flex items-center gap-1.5 rounded-md bg-accent px-3 py-1.5 text-[12px] font-semibold text-on-accent transition-opacity hover:opacity-90 disabled:opacity-50"
           >
             <IconTrash width={14} height={14} />
             {busy ? "Uninstalling…" : "Uninstall selected"}

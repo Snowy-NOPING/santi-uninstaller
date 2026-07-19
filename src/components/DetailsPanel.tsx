@@ -112,7 +112,7 @@ export function DetailsPanel({
         <button
           onClick={onUninstall}
           disabled={anyBusy}
-          className="flex items-center justify-center gap-2 rounded-lg bg-accent px-3 py-2.5 text-[13px] font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+          className="flex items-center justify-center gap-2 rounded-lg bg-accent px-3 py-2.5 text-[13px] font-semibold text-on-accent transition-opacity hover:opacity-90 disabled:opacity-50"
         >
           <IconTrash width={15} height={15} />
           {busy("uninstall") ? "Uninstalling…" : "Uninstall"}
@@ -213,7 +213,7 @@ export function DetailsPanel({
                     )
                   }
                   disabled={anyBusy || picked.size === 0}
-                  className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-lg bg-danger px-3 py-2 text-[12px] font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+                  className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-lg bg-danger px-3 py-2 text-[12px] font-semibold text-on-danger transition-opacity hover:opacity-90 disabled:opacity-50"
                 >
                   <IconTrash width={13} height={13} />
                   {busy("delete-leftovers")

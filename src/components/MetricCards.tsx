@@ -30,8 +30,8 @@ function CountUp({
 
 const CARDS = [
   { key: "installed", label: "Installed apps", Icon: IconBox, tint: "text-accent" },
-  { key: "size", label: "Total size", Icon: IconDrive, tint: "text-cyan-600" },
-  { key: "leftovers", label: "Leftover files found", Icon: IconBroom, tint: "text-pink-600" },
+  { key: "size", label: "Total size", Icon: IconDrive, tint: "text-info" },
+  { key: "leftovers", label: "Leftover files found", Icon: IconBroom, tint: "text-flag" },
 ] as const;
 
 export function MetricCards({ installedCount, totalSizeBytes, leftoverFiles }: Props) {

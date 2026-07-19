@@ -15,7 +15,7 @@ export function Sidebar({ active, counts, onSelect }: Props) {
   return (
     <aside className="flex w-56 shrink-0 flex-col border-r border-line bg-surface">
       <div className="flex items-center gap-2 px-5 py-4">
-        <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-accent text-[13px] font-bold text-white">
+        <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-accent text-[13px] font-bold text-on-accent">
           s.
         </div>
         <div className="text-[13px] font-semibold tracking-tight">
@@ -55,7 +55,7 @@ export function Sidebar({ active, counts, onSelect }: Props) {
               <span
                 className={`relative z-10 min-w-6 rounded-md px-1.5 py-0.5 text-center text-[11px] font-semibold tabular-nums ${
                   isActive
-                    ? "bg-accent text-white"
+                    ? "bg-accent text-on-accent"
                     : "bg-canvas text-muted"
                 }`}
               >

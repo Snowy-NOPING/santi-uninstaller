@@ -54,7 +54,7 @@ export function ProgramRow({
         <div className="flex items-center gap-2">
           <span className="truncate text-[13px] font-medium">{program.name}</span>
           {hasLeftovers && (
-            <span className="flex shrink-0 items-center gap-1 rounded-full bg-pink-50 px-1.5 py-0.5 text-[10px] font-semibold text-pink-600">
+            <span className="flex shrink-0 items-center gap-1 rounded-full bg-flag-soft px-1.5 py-0.5 text-[10px] font-semibold text-flag">
               <IconBroom width={10} height={10} />
               leftovers
             </span>

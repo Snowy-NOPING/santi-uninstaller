@@ -5,6 +5,13 @@
     <link rel="icon" type="image/svg+xml" href="/tauri.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>santi.uninstaller</title>
+    <script>
+      // Apply saved theme before first paint (default: dark / Catppuccin Mocha).
+      (function () {
+        var t = localStorage.getItem("theme") || "dark";
+        document.documentElement.setAttribute("data-theme", t);
+      })();
+    </script>
   </head>
 
   <body>

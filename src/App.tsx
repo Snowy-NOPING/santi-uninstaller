@@ -27,7 +27,9 @@ import { BatchBar } from "./components/BatchBar";
 import { ProgramList } from "./components/ProgramList";
 import { DetailsPanel } from "./components/DetailsPanel";
 import { ToastHost, type ToastData } from "./components/Toast";
-import { IconInfo, IconWarning } from "./components/Icons";
+import { IconInfo, IconWarning, IconSun, IconMoon } from "./components/Icons";
+
+type Theme = "light" | "dark";
 
 type Busy = { id: string | null; action: string | null };
 
@@ -46,7 +48,15 @@ export default function App() {
   const [busy, setBusy] = useState<Busy>({ id: null, action: null });
   const [toast, setToast] = useState<ToastData | null>(null);
   const [showInfo, setShowInfo] = useState(false);
+  const [theme, setTheme] = useState<Theme>(
+    () => (localStorage.getItem("theme") as Theme) || "dark",
+  );
   const toastTimer = useRef<number | undefined>(undefined);
+
+  useEffect(() => {
+    document.documentElement.setAttribute("data-theme", theme);
+    localStorage.setItem("theme", theme);
+  }, [theme]);
 
   const showToast = useCallback(
     (message: string, kind: ToastData["kind"]) => {
@@ -313,13 +323,26 @@ export default function App() {
           <h1 className="text-[15px] font-semibold tracking-tight">
             Installed programs
           </h1>
-          <button
-            onClick={() => setShowInfo((v) => !v)}
-            className="flex items-center gap-1.5 rounded-lg border border-line bg-surface px-2.5 py-1.5 text-[12px] font-medium text-muted transition-colors hover:text-ink"
-          >
-            <IconInfo width={14} height={14} />
-            v1 notes
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setTheme((t) => (t === "dark" ? "light" : "dark"))}
+              title={theme === "dark" ? "Switch to light" : "Switch to dark"}
+              className="flex h-[30px] w-[30px] items-center justify-center rounded-lg border border-line bg-surface text-muted transition-colors hover:text-ink"
+            >
+              {theme === "dark" ? (
+                <IconSun width={15} height={15} />
+              ) : (
+                <IconMoon width={15} height={15} />
+              )}
+            </button>
+            <button
+              onClick={() => setShowInfo((v) => !v)}
+              className="flex items-center gap-1.5 rounded-lg border border-line bg-surface px-2.5 py-1.5 text-[12px] font-medium text-muted transition-colors hover:text-ink"
+            >
+              <IconInfo width={14} height={14} />
+              v1 notes
+            </button>
+          </div>
         </div>
 
         <AnimatePresence>

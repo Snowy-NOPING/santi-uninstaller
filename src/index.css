@@ -1,5 +1,6 @@
 @import "tailwindcss";
 
+/* Default (light) theme tokens */
 @theme {
   --color-canvas: #f6f7f9;
   --color-surface: #ffffff;
@@ -13,9 +14,39 @@
   --color-danger: #dc2626;
   --color-danger-soft: #fdecec;
   --color-good: #16a34a;
+  --color-info: #0891b2;
+  --color-flag: #db2777;
+  --color-flag-soft: #fce7f3;
+  --color-on-accent: #ffffff;
+  --color-on-danger: #ffffff;
+}
+
+/* Dark theme — Catppuccin Mocha */
+:root[data-theme="dark"] {
+  --color-canvas: #181825; /* mantle */
+  --color-surface: #1e1e2e; /* base */
+  --color-line: #313244; /* surface0 */
+  --color-line-strong: #45475a; /* surface1 */
+  --color-ink: #cdd6f4; /* text */
+  --color-muted: #a6adc8; /* subtext0 */
+  --color-faint: #7f849c; /* overlay1 */
+  --color-accent: #cba6f7; /* mauve */
+  --color-accent-soft: #2b2743;
+  --color-danger: #f38ba8; /* red */
+  --color-danger-soft: #382630;
+  --color-good: #a6e3a1; /* green */
+  --color-info: #74c7ec; /* sapphire */
+  --color-flag: #f5c2e7; /* pink */
+  --color-flag-soft: #332a3a;
+  --color-on-accent: #1e1e2e; /* dark text on the light mauve accent */
+  --color-on-danger: #1e1e2e;
+  color-scheme: dark;
 }
 
 @layer base {
+  :root {
+    color-scheme: light;
+  }
   html,
   body,
   #root {
@@ -44,6 +75,14 @@
   }
   ::-webkit-scrollbar-thumb:hover {
     background: #c1c7cf;
+    background-clip: content-box;
+  }
+  :root[data-theme="dark"] ::-webkit-scrollbar-thumb {
+    background: #45475a;
+    background-clip: content-box;
+  }
+  :root[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
+    background: #585b70;
     background-clip: content-box;
   }
 }
