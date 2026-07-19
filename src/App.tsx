@@ -27,9 +27,26 @@ import { BatchBar } from "./components/BatchBar";
 import { ProgramList } from "./components/ProgramList";
 import { DetailsPanel } from "./components/DetailsPanel";
 import { ToastHost, type ToastData } from "./components/Toast";
-import { IconInfo, IconWarning, IconSun, IconMoon } from "./components/Icons";
+import { Settings, type AppSettings } from "./components/Settings";
+import {
+  IconInfo,
+  IconWarning,
+  IconSun,
+  IconMoon,
+  IconSettings,
+} from "./components/Icons";
 
 type Theme = "light" | "dark";
+
+const DEFAULT_SETTINGS: AppSettings = { cleanLeftoversFirst: false };
+
+function loadSettings(): AppSettings {
+  try {
+    return { ...DEFAULT_SETTINGS, ...JSON.parse(localStorage.getItem("settings") || "{}") };
+  } catch {
+    return DEFAULT_SETTINGS;
+  }
+}
 
 type Busy = { id: string | null; action: string | null };
 
@@ -51,12 +68,18 @@ export default function App() {
   const [theme, setTheme] = useState<Theme>(
     () => (localStorage.getItem("theme") as Theme) || "dark",
   );
+  const [settings, setSettings] = useState<AppSettings>(loadSettings);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const toastTimer = useRef<number | undefined>(undefined);
 
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", theme);
     localStorage.setItem("theme", theme);
   }, [theme]);
+
+  useEffect(() => {
+    localStorage.setItem("settings", JSON.stringify(settings));
+  }, [settings]);
 
   const showToast = useCallback(
     (message: string, kind: ToastData["kind"]) => {
@@ -152,16 +175,55 @@ export default function App() {
   );
 
   // --- Actions ---
+
+  /**
+   * Scan for leftovers and delete the orphan data (AppData/ProgramData/registry),
+   * deliberately KEEPING the install folder so the program's own uninstaller —
+   * which usually lives inside it — can still run afterward. Records the scan for
+   * the metrics/badges. Returns how many items were removed.
+   */
+  const cleanOrphans = async (program: InstalledProgram): Promise<number> => {
+    const report = await scanLeftovers(
+      program.name,
+      program.publisher,
+      program.installLocation,
+    );
+    const instLoc = (program.installLocation ?? "")
+      .replace(/[\\/]+$/, "")
+      .toLowerCase();
+    const toDelete = report.items.filter(
+      (i) =>
+        !(
+          i.kind === "folder" &&
+          instLoc.length > 0 &&
+          i.pathOrKey.replace(/[\\/]+$/, "").toLowerCase() === instLoc
+        ),
+    );
+    if (toDelete.length > 0) await deleteLeftovers(toDelete);
+    setLeftovers((prev) => ({ ...prev, [program.id]: report }));
+    return toDelete.length;
+  };
+
   const doUninstall = async (program: InstalledProgram) => {
+    const clean = settings.cleanLeftoversFirst;
     const ok = await ask(
-      `Uninstall ${program.name}?\n\nThis runs the program's own uninstaller.`,
+      clean
+        ? `Uninstall ${program.name}?\n\nLeftover app data and registry keys will be scanned and removed first, then the program's own uninstaller runs.`
+        : `Uninstall ${program.name}?\n\nThis runs the program's own uninstaller.`,
       { title: "Uninstall", kind: "warning", okLabel: "Uninstall" },
     );
     if (!ok) return;
     setBusy({ id: program.id, action: "uninstall" });
     try {
+      let cleaned = 0;
+      if (clean) cleaned = await cleanOrphans(program);
       const msg = await runUninstall(program.id, false);
-      showToast(msg, "success");
+      showToast(
+        clean && cleaned > 0
+          ? `Removed ${cleaned} leftover item(s), then uninstalled ${program.name}.`
+          : msg,
+        "success",
+      );
       await load();
     } catch (e) {
       if (needsElevation(e)) {
@@ -286,6 +348,7 @@ export default function App() {
     let failed = 0;
     for (const p of targets) {
       try {
+        if (settings.cleanLeftoversFirst) await cleanOrphans(p);
         await runUninstall(p.id, true);
         done += 1;
       } catch {
@@ -324,6 +387,13 @@ export default function App() {
             Installed programs
           </h1>
           <div className="flex items-center gap-2">
+            <button
+              onClick={() => setSettingsOpen(true)}
+              title="Settings"
+              className="flex h-[30px] w-[30px] items-center justify-center rounded-lg border border-line bg-surface text-muted transition-colors hover:text-ink"
+            >
+              <IconSettings width={15} height={15} />
+            </button>
             <button
               onClick={() => setTheme((t) => (t === "dark" ? "light" : "dark"))}
               title={theme === "dark" ? "Switch to light" : "Switch to dark"}
@@ -416,6 +486,13 @@ export default function App() {
           selected && void doDeleteLeftovers(selected, items)
         }
         onOpenFolder={() => selected && void doOpenFolder(selected)}
+      />
+
+      <Settings
+        open={settingsOpen}
+        settings={settings}
+        onChange={setSettings}
+        onClose={() => setSettingsOpen(false)}
       />
 
       <ToastHost toast={toast} />
