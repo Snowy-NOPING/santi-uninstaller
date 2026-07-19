@@ -7,10 +7,22 @@ import {
   IconWarning,
   IconFolder,
   IconRegistry,
+  IconShortcut,
   IconBox,
 } from "./Icons";
 import { bucketOf, CATEGORY_LABELS, formatBytes, formatDate, formatSizeKb } from "../format";
 import type { InstalledProgram, LeftoverItem, LeftoverReport } from "../types";
+
+/** Stable id — registry_value items share a key path, so include the value. */
+const itemId = (i: LeftoverItem) =>
+  i.valueName ? `${i.pathOrKey}||${i.valueName}` : i.pathOrKey;
+
+function LeftoverIcon({ kind }: { kind: LeftoverItem["kind"] }) {
+  if (kind === "registry" || kind === "registry_value")
+    return <IconRegistry width={13} height={13} />;
+  if (kind === "shortcut") return <IconShortcut width={13} height={13} />;
+  return <IconFolder width={13} height={13} />;
+}
 
 interface Props {
   program: InstalledProgram | null;
@@ -48,7 +60,7 @@ export function DetailsPanel({
 
   // Reset picked leftovers whenever the program or its report changes.
   useEffect(() => {
-    setPicked(new Set(report?.items.map((i) => i.pathOrKey) ?? []));
+    setPicked(new Set(report?.items.map(itemId) ?? []));
   }, [program?.id, report]);
 
   if (!program) {
@@ -167,49 +179,50 @@ export function DetailsPanel({
             ) : (
               <>
                 <div className="max-h-48 space-y-1 overflow-y-auto">
-                  {report.items.map((item) => (
-                    <label
-                      key={item.pathOrKey}
-                      className="flex cursor-pointer items-start gap-2 rounded-md p-1.5 hover:bg-canvas"
-                    >
-                      <input
-                        type="checkbox"
-                        checked={picked.has(item.pathOrKey)}
-                        onChange={() =>
-                          setPicked((prev) => {
-                            const next = new Set(prev);
-                            next.has(item.pathOrKey)
-                              ? next.delete(item.pathOrKey)
-                              : next.add(item.pathOrKey);
-                            return next;
-                          })
-                        }
-                        className="mt-0.5 h-3.5 w-3.5 shrink-0 accent-accent"
-                      />
-                      <span className="mt-0.5 shrink-0 text-faint">
-                        {item.kind === "registry" ? (
-                          <IconRegistry width={13} height={13} />
-                        ) : (
-                          <IconFolder width={13} height={13} />
-                        )}
-                      </span>
-                      <span className="min-w-0 flex-1">
-                        <span className="block break-all text-[11.5px] leading-snug">
-                          {item.pathOrKey}
+                  {report.items.map((item) => {
+                    const id = itemId(item);
+                    const hasSize =
+                      item.kind === "folder" || item.kind === "shortcut";
+                    return (
+                      <label
+                        key={id}
+                        className="flex cursor-pointer items-start gap-2 rounded-md p-1.5 hover:bg-canvas"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={picked.has(id)}
+                          onChange={() =>
+                            setPicked((prev) => {
+                              const next = new Set(prev);
+                              next.has(id) ? next.delete(id) : next.add(id);
+                              return next;
+                            })
+                          }
+                          className="mt-0.5 h-3.5 w-3.5 shrink-0 accent-accent"
+                        />
+                        <span className="mt-0.5 shrink-0 text-faint">
+                          <LeftoverIcon kind={item.kind} />
                         </span>
-                        {item.kind === "folder" && (
-                          <span className="text-[10.5px] text-faint">
-                            {formatBytes(item.sizeBytes)}
+                        <span className="min-w-0 flex-1">
+                          <span className="block break-all text-[11.5px] leading-snug">
+                            {item.kind === "registry_value" && item.valueName
+                              ? `${item.pathOrKey} \\ ${item.valueName}`
+                              : item.pathOrKey}
                           </span>
-                        )}
-                      </span>
-                    </label>
-                  ))}
+                          {hasSize && (
+                            <span className="text-[10.5px] text-faint">
+                              {formatBytes(item.sizeBytes)}
+                            </span>
+                          )}
+                        </span>
+                      </label>
+                    );
+                  })}
                 </div>
                 <button
                   onClick={() =>
                     onDeleteLeftovers(
-                      report.items.filter((i) => picked.has(i.pathOrKey)),
+                      report.items.filter((i) => picked.has(itemId(i))),
                     )
                   }
                   disabled={anyBusy || picked.size === 0}

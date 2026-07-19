@@ -289,7 +289,12 @@ export default function App() {
         const rep = prev[program.id];
         if (!rep) return prev;
         const remaining = rep.items.filter(
-          (i) => !items.some((d) => d.pathOrKey === i.pathOrKey),
+          (i) =>
+            !items.some(
+              (d) =>
+                d.pathOrKey === i.pathOrKey &&
+                (d.valueName ?? null) === (i.valueName ?? null),
+            ),
         );
         return {
           ...prev,

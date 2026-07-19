@@ -15,8 +15,10 @@ export interface InstalledProgram {
 
 export interface LeftoverItem {
   pathOrKey: string;
-  kind: "folder" | "registry";
+  kind: "folder" | "shortcut" | "registry" | "registry_value";
   sizeBytes: number;
+  /** Set only for kind === "registry_value": the value under pathOrKey. */
+  valueName?: string | null;
 }
 
 export interface LeftoverReport {
