@@ -30,6 +30,10 @@ import { DetailsPanel } from "./components/DetailsPanel";
 import { ToastHost, type ToastData } from "./components/Toast";
 import { Settings, type AppSettings } from "./components/Settings";
 import { LeftoverCleanupModal } from "./components/LeftoverCleanupModal";
+import {
+  BatchProgressModal,
+  type BatchItem,
+} from "./components/BatchProgressModal";
 import { IconInfo, IconWarning, IconSettings } from "./components/Icons";
 
 const VALID_THEMES: Theme[] = [
@@ -77,6 +81,10 @@ export default function App() {
   const [cleanup, setCleanup] = useState<{
     programName: string;
     report: LeftoverReport;
+  } | null>(null);
+  const [batch, setBatch] = useState<{
+    items: BatchItem[];
+    running: boolean;
   } | null>(null);
   const toastTimer = useRef<number | undefined>(undefined);
 
@@ -398,25 +406,40 @@ export default function App() {
       { title: "Uninstall selected", kind: "warning", okLabel: "Uninstall all" },
     );
     if (!ok) return;
+
+    const setItem = (id: string, patch: Partial<BatchItem>) =>
+      setBatch((prev) =>
+        prev
+          ? {
+              ...prev,
+              items: prev.items.map((it) =>
+                it.id === id ? { ...it, ...patch } : it,
+              ),
+            }
+          : prev,
+      );
+
+    setBatch({
+      items: targets.map((p) => ({ id: p.id, name: p.name, status: "pending" })),
+      running: true,
+    });
     setBusy({ id: null, action: "batch" });
-    let done = 0;
-    let failed = 0;
+
     for (const p of targets) {
+      setItem(p.id, { status: "running" });
       try {
         if (settings.cleanLeftoversFirst) await cleanOrphans(p);
-        await runUninstall(p.id, true);
-        done += 1;
-      } catch {
-        failed += 1;
+        const msg = await runUninstall(p.id, true);
+        setItem(p.id, { status: "done", message: msg });
+      } catch (e) {
+        setItem(p.id, { status: "failed", message: cleanError(e) });
       }
     }
+
     setChecked(new Set());
+    setBatch((prev) => (prev ? { ...prev, running: false } : prev));
     setBusy({ id: null, action: null });
     await load();
-    showToast(
-      `Batch complete: ${done} uninstalled${failed ? `, ${failed} failed` : ""}.`,
-      failed ? "info" : "success",
-    );
   };
 
   const toggleCheck = (id: string) => {
@@ -547,6 +570,12 @@ export default function App() {
         busy={busy.action === "cleanup-delete"}
         onDelete={(items) => void doCleanupDelete(items)}
         onClose={() => setCleanup(null)}
+      />
+
+      <BatchProgressModal
+        items={batch?.items ?? null}
+        running={batch?.running ?? false}
+        onClose={() => setBatch(null)}
       />
 
       <ToastHost toast={toast} />
