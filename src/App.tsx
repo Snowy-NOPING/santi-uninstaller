@@ -29,6 +29,7 @@ import { ProgramList } from "./components/ProgramList";
 import { DetailsPanel } from "./components/DetailsPanel";
 import { ToastHost, type ToastData } from "./components/Toast";
 import { Settings, type AppSettings } from "./components/Settings";
+import { LeftoverCleanupModal } from "./components/LeftoverCleanupModal";
 import { IconInfo, IconWarning, IconSettings } from "./components/Icons";
 
 const VALID_THEMES: Theme[] = [
@@ -73,6 +74,10 @@ export default function App() {
   });
   const [settings, setSettings] = useState<AppSettings>(loadSettings);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [cleanup, setCleanup] = useState<{
+    programName: string;
+    report: LeftoverReport;
+  } | null>(null);
   const toastTimer = useRef<number | undefined>(undefined);
 
   useEffect(() => {
@@ -320,15 +325,57 @@ export default function App() {
     if (!ok) return;
     setBusy({ id: program.id, action: "force" });
     try {
-      const msg = await forceRemove(program.id);
-      showToast(msg, "success");
+      const result = await forceRemove(program.id);
+      showToast(result.message, "success");
       setSelectedId(null);
       await load();
+      // The program is gone from the list now; surface any leftovers in a
+      // dedicated modal so they can be cleaned immediately.
+      if (result.leftovers.items.length > 0) {
+        setCleanup({ programName: program.name, report: result.leftovers });
+      }
     } catch (e) {
       const suffix = needsElevation(e)
         ? " Try relaunching santi.uninstaller as administrator."
         : "";
       showToast(cleanError(e) + suffix, "error");
+    } finally {
+      setBusy({ id: null, action: null });
+    }
+  };
+
+  const doCleanupDelete = async (items: LeftoverItem[]) => {
+    if (items.length === 0) return;
+    const ok = await confirm(
+      `Permanently delete ${items.length} leftover item(s)?`,
+      { title: "Delete leftovers", kind: "warning" },
+    );
+    if (!ok) return;
+    setBusy({ id: null, action: "cleanup-delete" });
+    try {
+      await deleteLeftovers(items);
+      showToast(`Deleted ${items.length} leftover item(s).`, "success");
+      setCleanup((prev) => {
+        if (!prev) return null;
+        const remaining = prev.report.items.filter(
+          (i) =>
+            !items.some(
+              (d) =>
+                d.pathOrKey === i.pathOrKey &&
+                (d.valueName ?? null) === (i.valueName ?? null),
+            ),
+        );
+        if (remaining.length === 0) return null;
+        return {
+          ...prev,
+          report: {
+            items: remaining,
+            totalSizeBytes: remaining.reduce((s, i) => s + i.sizeBytes, 0),
+          },
+        };
+      });
+    } catch (e) {
+      showToast(cleanError(e), "error");
     } finally {
       setBusy({ id: null, action: null });
     }
@@ -492,6 +539,14 @@ export default function App() {
         theme={theme}
         onThemeChange={setTheme}
         onClose={() => setSettingsOpen(false)}
+      />
+
+      <LeftoverCleanupModal
+        programName={cleanup?.programName ?? null}
+        report={cleanup?.report ?? null}
+        busy={busy.action === "cleanup-delete"}
+        onDelete={(items) => void doCleanupDelete(items)}
+        onClose={() => setCleanup(null)}
       />
 
       <ToastHost toast={toast} />

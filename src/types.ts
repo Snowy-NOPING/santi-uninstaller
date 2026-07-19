@@ -26,6 +26,11 @@ export interface LeftoverReport {
   totalSizeBytes: number;
 }
 
+export interface ForceRemoveResult {
+  message: string;
+  leftovers: LeftoverReport;
+}
+
 export type CategoryId = "all" | "recent" | "large" | "windows" | "leftovers";
 export type SortId = "name" | "size" | "date";
 export type Theme =

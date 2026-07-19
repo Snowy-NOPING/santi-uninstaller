@@ -1,5 +1,10 @@
 import { invoke } from "@tauri-apps/api/core";
-import type { InstalledProgram, LeftoverItem, LeftoverReport } from "./types";
+import type {
+  ForceRemoveResult,
+  InstalledProgram,
+  LeftoverItem,
+  LeftoverReport,
+} from "./types";
 
 export const scanInstalledPrograms = () =>
   invoke<InstalledProgram[]>("scan_installed_programs");
@@ -11,7 +16,7 @@ export const runUninstallAdmin = (programId: string, silent: boolean) =>
   invoke<string>("run_uninstall_admin", { programId, silent });
 
 export const forceRemove = (programId: string) =>
-  invoke<string>("force_remove", { programId });
+  invoke<ForceRemoveResult>("force_remove", { programId });
 
 export const scanLeftovers = (
   name: string,

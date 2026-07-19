@@ -1,28 +1,15 @@
 import { AnimatePresence, motion } from "framer-motion";
-import { useEffect, useState } from "react";
 import { Avatar } from "./Avatar";
 import {
   IconTrash,
   IconBroom,
   IconWarning,
   IconFolder,
-  IconRegistry,
-  IconShortcut,
   IconBox,
 } from "./Icons";
+import { LeftoverList } from "./LeftoverList";
 import { bucketOf, CATEGORY_LABELS, formatBytes, formatDate, formatSizeKb } from "../format";
 import type { InstalledProgram, LeftoverItem, LeftoverReport } from "../types";
-
-/** Stable id — registry_value items share a key path, so include the value. */
-const itemId = (i: LeftoverItem) =>
-  i.valueName ? `${i.pathOrKey}||${i.valueName}` : i.pathOrKey;
-
-function LeftoverIcon({ kind }: { kind: LeftoverItem["kind"] }) {
-  if (kind === "registry" || kind === "registry_value")
-    return <IconRegistry width={13} height={13} />;
-  if (kind === "shortcut") return <IconShortcut width={13} height={13} />;
-  return <IconFolder width={13} height={13} />;
-}
 
 interface Props {
   program: InstalledProgram | null;
@@ -56,13 +43,6 @@ export function DetailsPanel({
   onDeleteLeftovers,
   onOpenFolder,
 }: Props) {
-  const [picked, setPicked] = useState<Set<string>>(new Set());
-
-  // Reset picked leftovers whenever the program or its report changes.
-  useEffect(() => {
-    setPicked(new Set(report?.items.map(itemId) ?? []));
-  }, [program?.id, report]);
-
   if (!program) {
     return (
       <div className="flex w-80 shrink-0 flex-col items-center justify-center border-l border-line bg-surface p-8 text-center">
@@ -177,63 +157,11 @@ export function DetailsPanel({
                 No orphaned files or registry keys detected. Clean!
               </p>
             ) : (
-              <>
-                <div className="max-h-48 space-y-1 overflow-y-auto">
-                  {report.items.map((item) => {
-                    const id = itemId(item);
-                    const hasSize =
-                      item.kind === "folder" || item.kind === "shortcut";
-                    return (
-                      <label
-                        key={id}
-                        className="flex cursor-pointer items-start gap-2 rounded-md p-1.5 hover:bg-canvas"
-                      >
-                        <input
-                          type="checkbox"
-                          checked={picked.has(id)}
-                          onChange={() =>
-                            setPicked((prev) => {
-                              const next = new Set(prev);
-                              next.has(id) ? next.delete(id) : next.add(id);
-                              return next;
-                            })
-                          }
-                          className="mt-0.5 h-3.5 w-3.5 shrink-0 accent-accent"
-                        />
-                        <span className="mt-0.5 shrink-0 text-faint">
-                          <LeftoverIcon kind={item.kind} />
-                        </span>
-                        <span className="min-w-0 flex-1">
-                          <span className="block break-all text-[11.5px] leading-snug">
-                            {item.kind === "registry_value" && item.valueName
-                              ? `${item.pathOrKey} \\ ${item.valueName}`
-                              : item.pathOrKey}
-                          </span>
-                          {hasSize && (
-                            <span className="text-[10.5px] text-faint">
-                              {formatBytes(item.sizeBytes)}
-                            </span>
-                          )}
-                        </span>
-                      </label>
-                    );
-                  })}
-                </div>
-                <button
-                  onClick={() =>
-                    onDeleteLeftovers(
-                      report.items.filter((i) => picked.has(itemId(i))),
-                    )
-                  }
-                  disabled={anyBusy || picked.size === 0}
-                  className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-lg bg-danger px-3 py-2 text-[12px] font-semibold text-on-danger transition-opacity hover:opacity-90 disabled:opacity-50"
-                >
-                  <IconTrash width={13} height={13} />
-                  {busy("delete-leftovers")
-                    ? "Deleting…"
-                    : `Delete selected (${picked.size})`}
-                </button>
-              </>
+              <LeftoverList
+                items={report.items}
+                busy={busy("delete-leftovers")}
+                onDelete={onDeleteLeftovers}
+              />
             )}
           </motion.div>
         )}

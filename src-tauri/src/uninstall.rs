@@ -2,8 +2,18 @@
 // MSI products, and offers an elevated ("run as admin") retry path.
 
 use crate::registry::{find_program, InstalledProgram};
+use serde::Serialize;
 use std::path::Path;
 use std::process::Command;
+
+/// Result of a force-remove: what was removed, plus any leftovers found
+/// afterward so the frontend can offer immediate cleanup.
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ForceRemoveResult {
+    pub message: String,
+    pub leftovers: crate::leftovers::LeftoverReport,
+}
 
 /// Choose the command string to run for a given program.
 fn choose_command(prog: &InstalledProgram, silent: bool) -> Result<String, String> {
@@ -205,7 +215,7 @@ pub fn run_uninstall_admin(program_id: String, silent: bool) -> Result<String, S
 // ---- Force remove: skip the uninstaller, delete key + folder directly ----
 
 #[tauri::command]
-pub fn force_remove(program_id: String) -> Result<String, String> {
+pub fn force_remove(program_id: String) -> Result<ForceRemoveResult, String> {
     #[cfg(not(windows))]
     {
         let _ = program_id;
@@ -236,16 +246,36 @@ pub fn force_remove(program_id: String) -> Result<String, String> {
             Err(e) => errors.push(format!("registry: {e}")),
         }
 
-        if errors.is_empty() {
-            Ok(format!("Force-removed: {}.", removed.join(", ")))
-        } else if removed.is_empty() {
-            Err(format!("ELEVATION_REQUIRED: Force remove failed: {}", errors.join("; ")))
-        } else {
-            Err(format!(
-                "FAILED: Partially removed [{}]. Errors: {}",
-                removed.join(", "),
-                errors.join("; ")
-            ))
+        if !errors.is_empty() {
+            return if removed.is_empty() {
+                Err(format!(
+                    "ELEVATION_REQUIRED: Force remove failed: {}",
+                    errors.join("; ")
+                ))
+            } else {
+                Err(format!(
+                    "FAILED: Partially removed [{}]. Errors: {}",
+                    removed.join(", "),
+                    errors.join("; ")
+                ))
+            };
         }
+
+        // 3. Removal succeeded — immediately scan for remaining leftovers so the
+        //    frontend can offer to clean them without a separate manual scan.
+        let leftovers = crate::leftovers::scan_leftovers(
+            prog.name.clone(),
+            prog.publisher.clone(),
+            prog.install_location.clone(),
+        )
+        .unwrap_or(crate::leftovers::LeftoverReport {
+            items: Vec::new(),
+            total_size_bytes: 0,
+        });
+
+        Ok(ForceRemoveResult {
+            message: format!("Force-removed: {}.", removed.join(", ")),
+            leftovers,
+        })
     }
 }
