@@ -1,0 +1,13 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "Capabilities for the santi.uninstaller main window. Uninstall/delete/registry work runs in the Rust backend; the frontend needs dialogs for confirmations plus opener/shell for revealing paths.",
+  "windows": ["main"],
+  "permissions": [
+    "core:default",
+    "opener:default",
+    "dialog:default",
+    "shell:allow-open",
+    "fs:default"
+  ]
+}
